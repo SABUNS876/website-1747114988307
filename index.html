@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Tembak Musuh dengan Pesawat</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.55.2/phaser.min.js"></script>
+</head>
+<body>
+    <div id="game-container"></div>
+    <script>
+        const config = {
+            type: Phaser.AUTO,
+            width: 800,
+            height: 600,
+            physics: {
+                default: 'arcade',
+                arcade: {
+                    gravity: 0,
+                    debug: false
+                }
+            },
+            scene: {
+                preload: preload,
+                create: create,
+                update: update
+            }
+        };
+
+        const game = new Phaser.Game(config);
+        let player;
+        let cursors;
+        let bullets;
+        let enemies;
+        let score = 0;
+        let scoreText;
+
+        function preload() {
+            this.load.image('sky', 'assets/sky.png');
+            this.load.image('plane', 'assets/plane.png');
+            this.load.image('enemy', 'assets/enemy.png');
+            this.load.image('bullet', 'assets/bullet.png');
+        }
+
+        function create() {
+            this.add.image(400, 300, 'sky');
+            player = this.physics.add.sprite(400, 500, 'plane').setOrigin(0.5, 0.5);
+            player.setCollideWorldBounds(true);
+
+            bullets = this.physics.add.group({
+                defaultKey: 'bullet',
+                maxSize: 10
+            });
+
+            enemies = this.physics.add.group();
+            this.time.addEvent({
+                delay: 1000,
+                callback: spawnEnemy,
+                callbackScope: this,
+                loop: true
+            });
+
+            cursors = this.input.keyboard.createCursorKeys();
+            this.input.keyboard.on('keydown-SPACE', shoot);
+
+            scoreText = this.add.text(16, 16, 'Score: 0', { fontSize: '32px', fill: '#fff' });
+
+            this.physics.add.collider(bullets, enemies, hitEnemy, null, this);
+        }
+
+        function update() {
+            if (cursors.left.isDown) {
+                player.setVelocityX(-300);
+            } else if (cursors.right.isDown) {
+                player.setVelocityX(300);
+            } else {
+                player.setVelocityX(0);
+            }
+        }
+
+        function shoot() {
+            const bullet = bullets.get();
+            if (bullet) {
+                bullet.setActive(true);
+                bullet.setVisible(true);
+                bullet.setPosition(player.x, player.y - 20);
+                bullet.setVelocityY(-500);
+            }
+        }
+
+        function spawnEnemy() {
+            const x = Phaser.Math.Between(0, 800);
+            const enemy = enemies.create(x, 0, 'enemy');
+            enemy.setVelocityY(200);
+        }
+
+        function hitEnemy(bullet, enemy) {
+            bullet.setActive(false);
+            bullet.setVisible(false);
+            enemy.destroy();
+            score += 10;
+            scoreText.setText('Score: ' + score);
+        }
+    </script>
+</body>
+</html>
+```
